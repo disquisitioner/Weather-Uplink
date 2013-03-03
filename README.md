@@ -18,20 +18,25 @@ The program needs the Cosm.com API Key to be used in uploading data, and the URL
 
 The program also needs you to specify the USB port to which the Arduino sensor platform is connected.  Edit the program to provide this information as well.
 
-The program runs in an infinite loop.  On my Raspberry Pi I have it configured to be run as part of the system boot sequence so I'm sure it is started automatically whenever the Raspberry Pi is rebooted.
+The program runs in an infinite loop.  On my Raspberry Pi I have it configured to be run as part of the system boot sequence so I'm sure it is started automatically whenever the Raspberry Pi is rebooted. A simpler arrangement is to just start the program from the command line and have it execute independently:
+```
+% nohup wxstation2cosm.py > wx.out 2>&1 &
+```
 
 ### wxsummary.py
 
 By default the program outputs the daily high and low temperature, along with the time of day for each, for every day contained in the specified weather station logfile.  Command line options allow you to tell the program to just display the high and low temperatures for today or yesterday.
 
+The program generates the summary as output, so if you want to save it for other purposes you will need to redirect output into a file.  (I save the output and have a separate program that sends it to me as email.
+
 ```
-wxsummary.py [-h} [-t] [-y] logfile
+% wxsummary.py [-h} [-t] [-y] logfile > wxsummary.txt
 ```
 
 ### wxchart.py
 
-Generates a chart of daily high and low temperatures for the specified weather station logfile:
+This program gGenerates a chart of daily high and low temperatures for the specified weather station logfile. The chart takes the form of an HTML file which is generated as output and should be saved, then opened in a browser.
 ```
-wxchart.py logfile
+% wxchart.py logfile > wxchart.html
 ```
-
+The chart file generated makes reference to Google Visualization APIs so to be viewed propoerly you need to be connected to the internet when you load the file into a browser.
