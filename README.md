@@ -6,9 +6,9 @@ This repository contains programs used with a home weather station I've designed
 The program 'wxstation2cosm.py' contained here runs continuously on a Raspberry Pi connected to the Arduino USB port.  As data from the weather station is received it is stored in a logfile and also uploaded to a multi-stream feed on Cosm.com.  The logfile can then be accessed as a simple database by other programs, several examples of which are included here. Data uploaded to Cosm.com can be viewed on any web browser.
 
 Currently included:
-* wxstation2cosm.py - Reads weather station data from a USB port, uploads it to Cosm.com, and stores it in a logfile for use by other programs.
-* wxsummary.py - Extracts daily high and low temperature information from a weather station logfile and generates an message file which can be sent to anyone (including the weather station administrator) to summarize conditions observed by the weather station.
-* wxchart.py - Generates a chart of daily high and low temperature information from a weather station logfile.  The chart uses the Google Visualization API and the program's output is an HTML file that can be viewed in any browser.
+* 'wxstation2cosm.py' - Reads weather station data from a USB port, uploads it to Cosm.com, and stores it in a logfile for use by other programs.
+* 'wxsummary.py' - Extracts daily high and low temperature information from a weather station logfile and generates an message file which can be sent to anyone (including the weather station administrator) to summarize conditions observed by the weather station.
+* 'wxchart.py' - Generates a chart of daily high and low temperature information from a weather station logfile.  The chart uses the Google Visualization API and the program's output is an HTML file that can be viewed in any browser.
 
 ## Usage
 
@@ -27,16 +27,16 @@ The program runs in an infinite loop.  On my Raspberry Pi I have it configured t
 
 By default the program outputs the daily high and low temperature, along with the time of day for each, for every day contained in the specified weather station logfile.  Command line options allow you to tell the program to just display the high and low temperatures for today or yesterday.
 
-The program generates the summary as output, so if you want to save it for other purposes you will need to redirect output into a file.  (I save the output and have a separate program that sends it to me as email.
+The program generates the summary as output, so if you want to save it for other purposes you will need to redirect output into a file.  (I save the output and have a separate program that sends it to me as email.)
 
 ```
-% wxsummary.py [-h} [-t] [-y] logfile > wxsummary.txt
+% wxsummary.py [-h} [-t] [-y] wxlogfile > wxsummary.txt
 ```
 
 ### wxchart.py
 
-This program gGenerates a chart of daily high and low temperatures for the specified weather station logfile. The chart takes the form of an HTML file which is generated as output and should be saved, then opened in a browser.
+This program generates a chart of daily high and low temperatures for the specified weather station logfile. The chart takes the form of an HTML file which is generated as output and should be saved, then opened in a browser.
 ```
-% wxchart.py logfile > wxchart.html
+% wxchart.py wxlogfile > wxchart.html
 ```
 The chart file generated makes reference to Google Visualization APIs so to be viewed propoerly you need to be connected to the internet when you load the file into a browser.
