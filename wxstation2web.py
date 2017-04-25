@@ -40,12 +40,10 @@ from collections import deque
 
 from wx_wunderground import report_wu
 from wx_dweet import report_dweet
+from wx_xively import initialize_xively, report_xively
 
 # ------ Program parameters -----
-# Xively key and feed URL
-XIVELY_API_KEY = 'tS82GBe5Y-xWxg5PzMAN1JyN_JuSAKxRbSs2UWtzQ01XOD0g'
-XIVELY_FEED_ID = 1248145598
-
+# Weather Station location
 LONGITUDE  = "-121.9850"
 LATITUDE = "37.1455"
 
@@ -92,8 +90,8 @@ def main(device=PORT):
     f.seek(2)
 
     # Initialize Xively API and connect to our feed
-    api = xively.XivelyAPIClient(XIVELY_API_KEY)
-    feed = api.feeds.get(XIVELY_FEED_ID)
+    # api = xively.XivelyAPIClient(XIVELY_API_KEY)
+    xively_feed = initialize_xively()
 
     # Initialize variables used to compute rainfall since local midnight and
     # over the last hour (12 reports at a 5 minute interval)
@@ -129,9 +127,11 @@ def main(device=PORT):
         tz_hoff = tz_delta / 3600
         tz_moff = (tz_delta % 3600) / 60
 
-        # Then get local time
+        # Then get local time and UTC time
         lognow = time.localtime(time.time())
+        now = datetime.datetime.utcnow()
 
+        # Create ISO 8601 timestamp (which some services require)
         timestamp = ( '{0}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}{6:}{7:02d}{8:02d}'.
               format(lognow.tm_year,lognow.tm_mon,lognow.tm_mday,
               lognow.tm_hour,lognow.tm_min,lognow.tm_sec,
@@ -146,65 +146,10 @@ def main(device=PORT):
 
         #######################################################################
         #
-        # Post data to Xively
-        now = datetime.datetime.utcnow()
-        feed.datastreams[0].id = "OutdoorTemp"
-        feed.datastreams[0].current_value = outtemp
-        feed.datastreams[0].unit.label  = "degrees F"
-        feed.datastreams[0].unit.symbol = "F"
-        feed.datastreams[0].at = now
-
-        feed.datastreams[1].id = "Barometer"
-        feed.datastreams[1].current_value = barometer
-        feed.datastreams[1].unit.label  = "inches Hg"
-        feed.datastreams[1].unit.symbol = "in Hg"
-        feed.datastreams[1].at = now
-
-        feed.datastreams[2].id = "IndoorTemp"
-        feed.datastreams[2].current_value = intemp
-        feed.datastreams[2].unit.label  = "degrees F"
-        feed.datastreams[2].unit.symbol = "F"
-        feed.datastreams[2].at = now
-
-        feed.datastreams[3].id = "WindSpeed"
-        feed.datastreams[3].current_value = wspeed
-        feed.datastreams[3].unit.label  = "Miles per hour"
-        feed.datastreams[3].unit.symbol = "MPH"
-        feed.datastreams[3].at = now
-
-        feed.datastreams[4].id = "WindGust"
-        feed.datastreams[4].current_value = wgust
-        feed.datastreams[4].unit.label  = "Miles per hour"
-        feed.datastreams[4].unit.symbol = "MPH"
-        feed.datastreams[4].at = now
-
-        feed.datastreams[5].id = "Rainfall"
-        feed.datastreams[5].current_value = rainfall
-        feed.datastreams[5].unit.label  = "inches"
-        feed.datastreams[5].unit.symbol = "in"
-        feed.datastreams[5].at = now
-
-        feed.datastreams[6].id = "RainfallToday"
-        feed.datastreams[6].current_value = raintoday
-        feed.datastreams[6].unit.label  = "inches"
-        feed.datastreams[6].unit.symbol = "in"
-        feed.datastreams[6].at = now
-
-        # feed.datastreams = [
-            # Datastream(id='OutdoorTemp',  current_value=outtemp,   at=now),
-            # Datastream(id='Barometer',    current_value=barometer, at=now),
-            # Datastream(id='IndoorTemp',   current_value=intemp,    at=now),
-            # Datastream(id='WindSpeed',    current_value=wspeed,    at=now),
-            # Datastream(id='WindGust',     current_value=wgust,     at=now),
-            # Datastream(id='Rainfall',     current_value=rainfall,  at=now),
-            # Datastream(id='RainfallToday',current_value=raintoday, at=now),
-        # ]
-        try:
-            feed.update()
-        except Exception, e:
-            print e
-            traceback.print_exc()
-
+        # Post current sensor info to Xively
+        #
+        if xively_feed != None:
+            report_xively(xively_feed,now,outtemp,barometer,intemp,wspeed,wgust,rainfall,raintoday)
 
 
         #######################################################################
@@ -214,10 +159,10 @@ def main(device=PORT):
         report_dweet(timestamp,outtemp,barometer,intemp,wspeed,wgust,rainfall,raintoday)
 
 
-
         #######################################################################
         #
         # Post data to Weather Underground
+        #
 
         # Add current rainfall amount to the hour-long circular buffer.  (Weather
         # underground wants rainfall over the last hour, not the last five minutes,

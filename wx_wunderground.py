@@ -20,13 +20,14 @@ WEATHER_UPLOAD = True
 
 
 # Primary entry point, used to upload data to Weather Underground
-def report_wu(dateutc,temp_f,pressure,w_mph,w_gust,rainhour,raintoday):
+def report_wu(dateutc,temp_f,indoortemp_f,pressure,w_mph,w_gust,rainhour,raintoday):
         weather_data = {
                 "action": "updateraw",
                 "ID": wu_station_id,
                 "PASSWORD": wu_static_key,
                 "dateutc": str(dateutc),
                 "tempf": str(temp_f),
+                "indoortempf": str(indoortemp_f),
                 "baromin": str(pressure),
                 "windspeedmph": str(w_mph),
                 "windgustmph": str(w_gust),

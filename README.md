@@ -31,6 +31,11 @@ In all cases these routines run continuously as background processes on a Raspbe
 Each of the web services supported has its own URL, upload API, authentication method, and data format.  Key configuration settings are all at the beginning of the program, with comments
 providing guidance on appropriate values.  In some cases you'll need to sign up for the services and create an account, which often generates an access key or some authentication credentials.
 
+Each service implemented is defined in its own Python module, so for example the 
+interface to dweet.io is provided in wx_dweet.py.  Adding or removing services is 
+therefore much cleaner as the interface can be developed and tested separately as
+a Python module and then, when ready, quickly added to the main uplink program.
+
 The program runs in an infinite loop, reading data from the weather station
 over the serial port (generally via USB) and then dispatches the relevant information to each service in turn.  On my Raspberry Pi I have it configured to be run as part of the system boot sequence so I'm sure it is started automatically whenever the Raspberry Pi is rebooted. A simpler arrangement is to just start the program from the command line and have it execute independently:
 
