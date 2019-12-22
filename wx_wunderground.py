@@ -9,8 +9,8 @@ import urllib2
 #
 # These are only used here, so they don't need to be any more widely exposed than
 # necessary.
-wu_station_id = "KCALOSGA222"
-wu_static_key = "9abgy802"
+wu_station_id = "your_station_id_goes_here"
+wu_static_key = "your_wu_static_key_goes_here"
 
 # URL to use for uploading raw data
 WU_URL = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"

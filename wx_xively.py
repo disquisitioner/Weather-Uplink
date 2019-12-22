@@ -6,9 +6,9 @@
 import traceback
 import xively
 
-# Xively key and feed URL
-XIVELY_API_KEY = 'tS82GBe5Y-xWxg5PzMAN1JyN_JuSAKxRbSs2UWtzQ01XOD0g'
-XIVELY_FEED_ID = 1248145598
+# Xively key and feed URL.  Put yours here (these won't work)
+XIVELY_API_KEY = 'your_xively_key_goes_here'
+XIVELY_FEED_ID = 1234567890
 
 # Initialize the connection to Xively, returning the appropriate feed.  If Xively is
 # unavailable (which can happen) returns a feed value of 'None'

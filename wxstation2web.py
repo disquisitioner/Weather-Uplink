@@ -4,8 +4,8 @@
 # This version supports publishing to Xively and Dweet.io
 #
 # Author: David Bryant
-# Version: 2.0
-# Date: 20 November 2016
+# Version: 2.1
+# Date: 22 July 2018
 #
 # Expects to receive weather station data over serial port as a line
 # of text in the following format:
@@ -21,6 +21,7 @@
 # borrowing from Xively python SDK examples.
 #
 # Version History
+#   2.1   Added support for ThingSpeak
 #   2.0   Added support for Weather Underground, initial modular implementation
 #   1.7   Removed Voices support (alas)
 #   1.6   Added support for dweet.io via the dweepy module
@@ -32,15 +33,16 @@ import traceback
 import time
 import datetime
 import serial
-import xively
-import urllib2
-import json
+# import xively
+# import urllib2
+# import json
 
 from collections import deque
 
 from wx_wunderground import report_wu
 from wx_dweet import report_dweet
-from wx_xively import initialize_xively, report_xively
+from wx_thingspeak import report_thingspeak
+# from wx_xively import initialize_xively, report_xively
 
 # ------ Program parameters -----
 # Weather Station location
@@ -91,12 +93,12 @@ def main(device=PORT):
 
     # Initialize Xively API and connect to our feed
     # api = xively.XivelyAPIClient(XIVELY_API_KEY)
-    xively_feed = initialize_xively()
+    # xively_feed = initialize_xively()
 
     # Initialize variables used to compute rainfall since local midnight and
     # over the last hour (12 reports at a 5 minute interval)
     prev_hr = 0
-    raintoday = 0
+    rainsum = 0.0
     rainhr = deque(maxlen=12)
 
     # Infinite loop reading data from the input device
@@ -108,11 +110,15 @@ def main(device=PORT):
         if prev_hr == 23 and localnow.tm_hour == 0:
             # This is first sample after local midnight
             prev_hr = 0
-            print "Rainfall today ",raintoday
-            raintoday = float(rainfall)
+            rainsum = float(rainfall)
+            # print "Rainfall today ",rainsum
         else:
             prev_hr = localnow.tm_hour
-            raintoday += float(rainfall)
+            rainsum += float(rainfall)
+
+        raintoday = "{0:.2f}".format(rainsum)
+
+
 
         # Build ISO 8601 timestamp with local time but show current TZ offset
         # First figure out our timezone offset
@@ -148,8 +154,9 @@ def main(device=PORT):
         #
         # Post current sensor info to Xively
         #
-        if xively_feed != None:
-            report_xively(xively_feed,now,outtemp,barometer,intemp,wspeed,wgust,rainfall,raintoday)
+        # if xively_feed != None:
+        #            report_xively(xively_feed,now,outtemp,barometer,
+        #                  intemp,wspeed,wgust,rainfall,raintoday)
 
 
         #######################################################################
@@ -164,9 +171,10 @@ def main(device=PORT):
         # Post data to Weather Underground
         #
 
-        # Add current rainfall amount to the hour-long circular buffer.  (Weather
-        # underground wants rainfall over the last hour, not the last five minutes,
-        # so we need to keep track of the most recent 12 samples and report their sum.)
+        # Add current rainfall amount to the hour-long circular buffer.  
+        # (Weather underground wants rainfall over the last hour, not the 
+        # last five minutes, so we need to keep track of the most recent 
+        # 12 samples and report their sum.)
         rainhr.append(float(rainfall))
 
         # Report data to Weather Underground
@@ -174,11 +182,17 @@ def main(device=PORT):
         report_wu(now,outtemp,barometer,wspeed,wgust,r,raintoday)
 
 
+        #######################################################################
+        #
+        # Post data to ThingSpeak
+        #
+        report_thingspeak(timestamp,outtemp,barometer,intemp,wspeed,wgust,rainfall,raintoday)
+
 
         # Write timestamp and data to output file
         f.write(timestamp + ',' + samplenum + ',' + outtemp + ',' + 
             barometer + ',' + intemp + ',' + wspeed + ',' + wgust + 
-            ',' + rainfall +  ',' + "{:0.2f}".format(raintoday) + '\n');
+            ',' + rainfall +  ',' + raintoday + '\n');
 
         # Flush output buffer and sync to disk
         f.flush()
