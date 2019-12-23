@@ -1,12 +1,11 @@
 Weather-Uplink
 ===============
 
-This repository contains programs used to uplink data from a simple home weather station to various cloud services such as Xively and Dweet. The weather station in question is one I've designed and built around an Arduino and a variety of digital and analog sensors. It's capable of reading data from the sensors, processing that data, displaying it on an OLED display, and then periodically emitting aggregate readings over the Arduino's serial port.  (All the code for that will appear on GitHub soon.)
+This repository contains programs used to uplink data from a simple home weather station to various cloud services such as Xively and Dweet. The weather station in question is one I've designed and built around an Arduino and a variety of digital and analog sensors. It's capable of reading data from the sensors, processing that data, displaying it on an OLED display, and periodically emitting aggregate readings over the Arduino's serial port.
 
 The code here provides a means for getting the periodic sensor readings from the Arduino weather station to any of a number of Interent services through some network-connected system such as a PC or Raspberry Pi. While I could have added network connectivity to the Arduino itself I wanted a separate, more sophisticated system in the loop to properly handle data logging and backup, restarting everything should there be an interruption in power or network connectivity, routine generation of automatic reports, etc.  There are existing tools to do this and someday I might switch to them.  For now, though, this is a fun and interesting way to learn Python, Raspberry Pi, and Linux.
 
-The programs here represent an ongoing evolution in how the weather station's data is uploaded.  In the beginning (late 2012) I selected Cosm as the uplink service given its free and open APIs and ability to both log and interactively graph the data.  In May 2013 Cosm came out of beta and relaunched as Xively, changing its APIs but not its general features, and so I migrated the uplink software to the new interface. Later in 2013 I added support for some other new cloud services, and that's a pattern that has continued through today. 
-
+First versions of these routines appeared in late 2012 with my initial weather station design and have evolved substantially since then. In the beginning I selected Cosm as the uplink service given its free and open APIs and ability to both log and interactively graph the data.  In May 2013 Cosm came out of beta and relaunched as Xively, changing its APIs but not its general features, and so I migrated the uplink software to the new interface.  Other interesting storage and reporting services have come online over time, such as Dweet.io and Thingspeak, so I added support for them.  Xively eventually retired its free developer service, at which point I redesigned the code to make it easier to add and remove services. I used that model to also add support for Weather Underground, enabling my home weather station to join thousands of others in sharing local weather information.
 ## Content
 **Uplink Code**
 
@@ -15,6 +14,12 @@ In all cases these routines run continuously as background processes on a Raspbe
 * `wxstation2web.py` -- This is the current version of the uplink application, with the name reflecting that it delivers the regular weather station data to a variety of web services.  All ongoing development is happening in this application
 * `wxstation2xively.py` -- A previous version that just uploads data to Xively.com, which was needed when Cosm relaunched as Xively and the APIs changed. Given no ongoing development is happening, this is simply here for reference purposes.
 * `wxstation2cosm.py` -- The first generation uplink utility, designed to work with Cosm.com (which no longer exists)
+
+The main uplink application, `wxstation2web.py`, relies on separate service-specific routines to properly format and upload data to whichever services I intend to use via their standard Python APIs.  At present there are several such service-specific routines:
+* `wx_wunderground.py` -- for upload to Weather Underground
+* `wx_dweet.py` -- for upload to Dweet.io
+* `wx_thingspeak.py` -- for upload to Thingspeak.com
+* `wx_xively.py` -- no longer used as Xively no longer provides non-commercial service
 
 
 **Other Utilities**
@@ -28,19 +33,15 @@ In all cases these routines run continuously as background processes on a Raspbe
 
 ### wxstation2web.py
 
-Each of the web services supported has its own URL, upload API, authentication method, and data format.  Key configuration settings are all at the beginning of the program, with comments
-providing guidance on appropriate values.  In some cases you'll need to sign up for the services and create an account, which often generates an access key or some authentication credentials.
+Each of the web services supported has its own URL, upload API, authentication method, and data format.  Key configuration settings are all at the beginning of the program, with comments providing guidance on appropriate values.  In some cases you'll need to sign up for the services and create an account, which often generates an access key or some authentication credentials.
 
-Each service implemented is defined in its own Python module, so for example the 
-interface to dweet.io is provided in wx_dweet.py.  Adding or removing services is 
-therefore much cleaner as the interface can be developed and tested separately as
-a Python module and then, when ready, quickly added to the main uplink program.
+Each service implemented is defined in its own Python module, so for example the interface to dweet.io is provided in wx_dweet.py.  Adding or removing services is therefore much cleaner as the interface can be developed and tested separately as a Python module and then, when ready, quickly added to the main uplink program.
 
 The program runs in an infinite loop, reading data from the weather station
 over the serial port (generally via USB) and then dispatches the relevant information to each service in turn.  On my Raspberry Pi I have it configured to be run as part of the system boot sequence so I'm sure it is started automatically whenever the Raspberry Pi is rebooted. A simpler arrangement is to just start the program from the command line and have it execute independently:
 
 ```
-% nohup wxstation2cosm.py > wx.out 2>&1 &
+% nohup wxstation2web.py > wx.out 2>&1 &
 ```
 
 ### wxsummary.py
